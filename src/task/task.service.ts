@@ -1,24 +1,32 @@
+import { TaskSchema } from './schemas/task.schema';
 import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { iTask } from './interface/task.interface';
+import { TaskDTO } from './dto/task.dto';
 
 @Injectable()
 export class TaskService {
-  getTasks() {
-    return { tasks: [] };
+  constructor(@InjectModel('Task') private taskModel: Model<iTask>) {}
+  async getTasks(): Promise<iTask[]> {
+    return await this.taskModel.find();
   }
 
-  addTask(task: any) {
-    return { message: 'task added', task };
+  async addTask(task: TaskDTO): Promise<iTask> {
+    const newTask = new this.taskModel({ ...task });
+    return await newTask.save();
   }
 
-  getOneTask(id: string) {
-    return { message: 'singleTask', id };
+  async getOneTask(id: string) {
+    return await this.taskModel.findById(id);
   }
 
-  updateTask(id: string, task: any) {
-    return { message: 'update task', id, task };
+  async updateTask(id: string, task: TaskDTO) {
+    const existTask = await this.taskModel.findById(id);
+    if (existTask) return existTask.update(task);
   }
 
-  deleteTask(id: string) {
-    return { message: 'task deleted', id };
+  async deleteTask(id: string) {
+    return await this.taskModel.findByIdAndDelete(id);
   }
 }
